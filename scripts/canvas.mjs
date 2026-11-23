@@ -1,5 +1,6 @@
 // Canvas rules. Issue text is untrusted: only exact, allowlisted values get through.
 export const USER = 'AidanPhilpott';
+export const SITE_URL = 'https://aidanphilpott.github.io/AidanPhilpott/';
 export const COLUMNS = 60; // A wide, short band that fills the README like the contribution graph.
 export const ROW_LETTERS = 'ABCDEFGHIJKLM'.split('');
 
@@ -61,6 +62,7 @@ export const DEFAULT_TILES = drawDefault();
 // The period in "Eng." is placed by the cursor animation, so visitors can't take it.
 export const DOT_CELL = cellId(ENG_COLUMN + 15, TEXT_ROW + 6);
 export const DAILY_LIMIT = 3;
+export const DAILY_CAP = 100; // Keeps spam from causing unbounded Actions work.
 export const blankState = (updated = null, placements = null) => ({ version: 3, updated, placed: 0, placements, fresh: [], tiles: {} });
 
 // A reset clears the drawing but must not hand people a fresh daily allowance.
@@ -68,15 +70,22 @@ export const resetState = (state, today) => blankState(today, state.placements?.
 
 const colorByLabel = new Map(Object.entries(COLORS).map(([key, { label }]) => [label, key]));
 
-export function parseMove(body) {
+export const formatMoves = (moves) => moves.map(({ cell, color }) => `${cell}:${COLORS[color].label}`).join(', ');
+
+export function parseMoves(body) {
   const source = String(body ?? '').replace(/\r/g, '');
   if (source.length > 500) return null;
-  const read = (heading) => source.match(new RegExp(`^### ${heading}\\n+(.+)$`, 'm'))?.[1]?.trim();
-  const column = read('Column');
-  const row = read('Row');
-  const color = colorByLabel.get(read('Color'));
-  if (!/^(?:[1-9]|[1-5]\d|60)$/.test(column ?? '') || !/^[A-M]$/.test(row ?? '') || !color) return null;
-  return { cell: `${row}${column}`, color };
+  const line = source.match(/^### Tiles\n+(.+)$/m)?.[1]?.trim();
+  if (!line) return null;
+  const parts = line.split(/\s*,\s*/);
+  if (parts.length > DAILY_LIMIT) return null;
+  const moves = [];
+  for (const part of parts) {
+    const match = part.match(/^([A-M])([1-9]|[1-5]\d|60):(Faint|Soft|Medium|Strong)$/);
+    if (!match) return null;
+    moves.push({ cell: `${match[1]}${match[2]}`, color: colorByLabel.get(match[3]) });
+  }
+  return new Set(moves.map((m) => m.cell)).size === moves.length ? moves : null;
 }
 
 const byCreated = (a, b) => String(a.created_at).localeCompare(String(b.created_at)) || a.number - b.number;
@@ -84,26 +93,38 @@ const byCreated = (a, b) => String(a.created_at).localeCompare(String(b.created_
 export function applyMoves(state, issues, today) {
   const next = { ...state, tiles: { ...state.tiles }, fresh: [] };
   const counts = new Map(state.placements?.day === today ? Object.entries(state.placements.counts) : []);
+  let total = [...counts.values()].reduce((sum, n) => sum + n, 0);
   const claimed = new Set();
   const results = [];
 
   for (const issue of issues.filter((i) => !i.pull_request).sort(byCreated)) {
     const login = issue.user?.login;
-    const move = issue.user?.type === 'User' ? parseMove(issue.body) : null;
-    let outcome = 'placed';
-    if (!login || !move) outcome = 'invalid';
-    else if (move.cell === DOT_CELL) outcome = 'locked';
-    else if ((counts.get(login) ?? 0) >= DAILY_LIMIT) outcome = 'limit';
-    else if (claimed.has(move.cell)) outcome = 'taken';
-
-    if (outcome === 'placed') {
-      next.tiles[move.cell] = { color: move.color, by: login, day: today };
-      next.fresh.push(move.cell);
-      counts.set(login, (counts.get(login) ?? 0) + 1);
-      claimed.add(move.cell);
-      next.updated = today;
+    const moves = issue.user?.type === 'User' ? parseMoves(issue.body) : null;
+    if (!login || !moves) {
+      results.push({ number: issue.number, outcome: 'invalid', tiles: [] });
+      continue;
     }
-    results.push({ number: issue.number, outcome, cell: move?.cell ?? null, color: move?.color ?? null });
+    // Over the daily cap, this issue and later ones stay open for the next day's run.
+    if (total + moves.length > DAILY_CAP) break;
+
+    const tiles = moves.map(({ cell, color }) => {
+      let outcome = 'placed';
+      if (cell === DOT_CELL) outcome = 'locked';
+      else if ((counts.get(login) ?? 0) >= DAILY_LIMIT) outcome = 'limit';
+      else if (claimed.has(cell)) outcome = 'taken';
+      if (outcome === 'placed') {
+        next.tiles[cell] = { color, by: login, day: today };
+        next.fresh.push(cell);
+        counts.set(login, (counts.get(login) ?? 0) + 1);
+        claimed.add(cell);
+        total += 1;
+        next.updated = today;
+      }
+      return { cell, color, outcome };
+    });
+    const placed = tiles.filter((t) => t.outcome === 'placed').length;
+    const outcome = placed === tiles.length ? 'placed' : placed ? 'partial' : 'rejected';
+    results.push({ number: issue.number, outcome, tiles });
   }
   if (next.fresh.length) {
     next.placed = (state.placed ?? 0) + next.fresh.length;
@@ -112,12 +133,16 @@ export function applyMoves(state, issues, today) {
   return { state: next, results };
 }
 
-export function replyFor({ outcome, cell, color }) {
-  switch (outcome) {
-    case 'placed': return `Placed ${COLORS[color].label} at ${cell}. It's on the canvas now.`;
-    case 'locked': return `${cell} is reserved for Aidan's cursor. Choose another tile.`;
-    case 'limit': return `You've placed ${DAILY_LIMIT} tiles today. Try again tomorrow.`;
-    case 'taken': return `${cell} was claimed earlier in this update. Choose another tile.`;
-    default: return 'This move could not be read. Use the Place a tile link on the profile.';
-  }
+const list = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
+
+export function replyFor({ outcome, tiles = [] }) {
+  if (outcome === 'invalid') return `These tiles could not be read. Choose them on the canvas: ${SITE_URL}`;
+  const cells = (kind) => tiles.filter((t) => t.outcome === kind).map((t) => t.cell);
+  const placed = tiles.filter((t) => t.outcome === 'placed').map((t) => `${COLORS[t.color].label} at ${t.cell}`);
+  const lines = [];
+  if (placed.length) lines.push(`Placed ${list(placed)}. It's on the canvas now: https://github.com/${USER}`);
+  if (cells('locked').length) lines.push(`${list(cells('locked'))} is reserved for Aidan's cursor.`);
+  if (cells('taken').length) lines.push(`${list(cells('taken'))} was claimed moments earlier.`);
+  if (cells('limit').length) lines.push(`You've reached ${DAILY_LIMIT} tiles today, so ${list(cells('limit'))} wasn't placed. Try again tomorrow.`);
+  return lines.join('\n\n');
 }

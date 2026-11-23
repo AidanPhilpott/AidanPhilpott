@@ -41,7 +41,7 @@ if (command === 'reset') {
       await api(`/issues/${result.number}/comments`, { method: 'POST', body: JSON.stringify({ body: replyFor(result) }) });
       await api(`/issues/${result.number}`, {
         method: 'PATCH',
-        body: JSON.stringify({ state: 'closed', state_reason: result.outcome === 'placed' ? 'completed' : 'not_planned' }),
+        body: JSON.stringify({ state: 'closed', state_reason: ['placed', 'partial'].includes(result.outcome) ? 'completed' : 'not_planned' }),
       });
     }
   }

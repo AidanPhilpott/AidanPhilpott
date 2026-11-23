@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="canvas-api" content="https://api.github.com/repos/AidanPhilpott/AidanPhilpott">
+  <meta name="description" content="A collaborative experiment. Place up to three tiles a day.">
+  <title>Aidan’s Canvas</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="picker.css">
+  <script type="module" src="picker.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="https://github.com/AidanPhilpott">AidanPhilpott</a>
+      <span aria-hidden="true">/</span>
+      <span class="crumb-current" aria-current="page">Aidan’s Canvas</span>
+    </nav>
+    <a class="btn" href="https://github.com/AidanPhilpott">Back to profile</a>
+  </header>
+
+  <main class="page">
+    <div class="heading">
+      <div>
+        <h1>Aidan’s Canvas</h1>
+        <p class="muted">A collaborative experiment. Place up to three tiles a day. Resets weekly.</p>
+      </div>
+      <p class="counter muted"><strong id="placed">0</strong> <span id="placed-label">custom tiles placed</span></p>
+    </div>
+
+    <section class="box" aria-label="Canvas">
+      <div class="scroller" id="scroller">
+        <div class="grid" id="grid" role="grid" aria-label="Canvas tiles. Use arrow keys to move and Enter to place a tile."></div>
+      </div>
+
+      <div class="toolbar">
+        <fieldset class="shades" id="shades">
+          <legend>Shade</legend>
+        </fieldset>
+        <div class="actions">
+          <span class="slots" id="slots" aria-hidden="true"></span>
+          <span class="muted tile-count" id="count">0 of 3 tiles</span>
+          <button class="btn" id="undo" type="button" disabled>Undo</button>
+          <button class="btn btn-primary" id="continue" type="button" disabled>Continue on GitHub</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="status" id="status" role="status" aria-live="polite" hidden></div>
+    <p class="fine muted">Requires a GitHub account. Aidan takes no responsibility for what is drawn here.</p>
+  </main>
+</body>
+</html>

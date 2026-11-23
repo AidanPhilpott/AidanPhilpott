@@ -1,6 +1,9 @@
 name: Update canvas
 
+# Runs as soon as a tile is submitted. The daily schedule is a safety net for anything missed.
 on:
+  issues:
+    types: [opened, labeled]
   schedule:
     - cron: "17 8 * * *"
   workflow_dispatch:
@@ -9,11 +12,13 @@ permissions:
   contents: write
   issues: write
 
+# GitHub keeps one queued run per group, so a burst of submissions collapses into a batch.
 concurrency:
-  group: canvas
+  group: canvas-update
 
 jobs:
   update:
+    if: github.event_name != 'issues' || contains(github.event.issue.labels.*.name, 'tile')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -21,16 +26,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: npm ci --ignore-scripts
-      - run: npm test
-      - run: CANVAS_RESULTS="$RUNNER_TEMP/canvas-results.json" node scripts/update-canvas.mjs apply
-      - run: npm run build
-      - name: Commit the updated canvas
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add canvas assets README.md
-          if ! git diff --cached --quiet; then
-            git commit -m "Update canvas"
-            git push
-          fi
-      - run: CANVAS_RESULTS="$RUNNER_TEMP/canvas-results.json" node scripts/update-canvas.mjs respond
+      - if: github.event_name != 'issues'
+        run: npm test
+      - name: Apply and publish tiles
+        run: bash scripts/publish.sh apply "Update canvas"
+        env:
+          CANVAS_RESULTS: ${{ runner.temp }}/canvas-results.json
+      - name: Reply to submissions
+        run: node scripts/update-canvas.mjs respond
+        env:
+          CANVAS_RESULTS: ${{ runner.temp }}/canvas-results.json

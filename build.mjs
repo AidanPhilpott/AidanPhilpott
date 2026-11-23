@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as fontkit from 'fontkit';
-import { COLORS, COLUMNS, DAILY_LIMIT, DEFAULT_TILES, DOT_CELL, EMPTY_TILE, ROW_LETTERS, USER, cellId } from './scripts/canvas.mjs';
+import { COLORS, COLUMNS, DAILY_LIMIT, DEFAULT_TILES, DOT_CELL, EMPTY_TILE, ROW_LETTERS, SITE_URL, cellId } from './scripts/canvas.mjs';
 
 const OUT = process.env.CANVAS_OUT ?? '.';
 const STATE = process.env.CANVAS_STATE ?? 'canvas/state.json';
@@ -12,21 +12,15 @@ const STEP = 15; // GitHub's contribution graph spacing.
 const TILE = 11; // GitHub's contribution graph tile.
 const W = COLUMNS * STEP - (STEP - TILE);
 const H = ROW_LETTERS.length * STEP - (STEP - TILE);
-const MAP_GUTTER = 32;
-const MAP_TOP = 32;
 const DOT_X = (Number(DOT_CELL.slice(1)) - 1) * STEP;
 const DOT_Y = ROW_LETTERS.indexOf(DOT_CELL[0]) * STEP;
 const NAME = 'Aidan’s Canvas';
-const REPO_URL = `https://github.com/${USER}/${USER}`;
-const FORM_URL = `${REPO_URL}/issues/new?template=place-tile.yml`;
-const MAP_URL = `${REPO_URL}/blob/main/assets/canvas-map.svg?raw=true`;
 const BUTTON = {
   light: { bg: '#f6f8fa', border: '#d1d9e0', fg: '#25292e', muted: '#59636e' },
   dark: { bg: '#212830', border: '#3d444d', fg: '#f0f6fc', muted: '#9198a1' },
 };
 const CURSOR = { light: '#0969da', dark: '#1f6feb' };
 
-const { roles } = JSON.parse(readFileSync('design/project.tokens.json', 'utf8'));
 const state = JSON.parse(readFileSync(STATE, 'utf8'));
 const placed = state.placed ?? 0;
 const tileWord = placed === 1 ? 'tile' : 'tiles';
@@ -78,7 +72,7 @@ const tileCss = `.tile{rx:var(--tile-radius)}
 .empty{fill:var(--contribution-0)}
 ${Object.keys(COLORS).map((key) => `.c-${key}{fill:var(--tile-${key})}`).join('\n')}`;
 
-function tiles(left, top, { animate = false, guides = false } = {}) {
+function tiles(left, top, { animate = false } = {}) {
   const fresh = new Set(state.fresh);
   let order = 0;
   let out = '';
@@ -89,7 +83,7 @@ function tiles(left, top, { animate = false, guides = false } = {}) {
       const color = custom?.color ?? DEFAULT_TILES.get(id);
       const dot = animate && id === DOT_CELL;
       const enter = animate && color && !dot && (!custom || fresh.has(id));
-      const base = color ? `c-${color}` : guides && (c + 1) % 4 === 0 ? 'guide' : 'empty';
+      const base = color ? `c-${color}` : 'empty';
       const style = enter ? ` style="--i:${order++}"` : '';
       const geometry = `x="${left + c * STEP}" y="${top + r * STEP}" width="${TILE}" height="${TILE}"`;
       if (dot) out += `<rect class="tile empty" ${geometry}/>`;
@@ -167,56 +161,26 @@ ${outline(startX + iconSize + gap, 21, text, 'action')}
 `;
 }
 
-// Shown inside the tile form. It has an opaque background so it stays legible in any GitHub theme.
-function renderMap() {
-  const mapW = Math.ceil((MAP_GUTTER + W + 8) / 4) * 4;
-  const mapH = Math.ceil((MAP_TOP + H + 8) / 4) * 4;
-  const label = (x, y, value, anchor) => `<text class="map-label" x="${x}" y="${y}" text-anchor="${anchor}">${esc(value)}</text>`;
-  let body = `<rect class="canvas" width="${mapW}" height="${mapH}"/>`;
-  for (let c = 3; c < COLUMNS; c += 4) body += label(MAP_GUTTER + c * STEP + TILE / 2, MAP_TOP - 10, c + 1, 'middle');
-  ROW_LETTERS.forEach((letter, r) => { if (r % 2 === 0) body += label(MAP_GUTTER - 10, MAP_TOP + r * STEP + 10, letter, 'end'); });
-  body += tiles(MAP_GUTTER, MAP_TOP, { guides: true });
-  const title = `Map of ${NAME} with row letters A to M and column numbers 1 to ${COLUMNS}.`;
-  const modeTokens = (m) => `${tileTokens(m)};--map-bg:${roles['bg.primary'][m]};--map-guide:${roles['fill.secondary'][m]};--map-label:${roles['label.secondary'][m]}`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${mapW} ${mapH}" width="${mapW}" height="${mapH}" role="img" aria-label="${esc(title)}">
-<title>${esc(title)}</title>
-<style>
-:root{${modeTokens('light')};--tile-radius:2px;--type-map-size:12px;--fontStack-monospace:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
-@media (prefers-color-scheme:dark){:root{${modeTokens('dark')}}}
-.canvas{fill:var(--map-bg)}
-.guide{fill:var(--map-guide)}
-.map-label{font-family:var(--fontStack-monospace);font-size:var(--type-map-size);fill:var(--map-label)}
-${tileCss}
-</style>
-${body}
-</svg>
-`;
-}
-
-const dropdown = (id, label, options) => `  - type: dropdown
-    id: ${id}
-    attributes:
-      label: ${label}
-      options:
-${options.map((o) => `        - "${o}"`).join('\n')}
-    validations:
-      required: true
-`;
-
 const issueForm = `name: Place a tile
-description: Add a tile to Aidan's Canvas.
+description: Add up to ${DAILY_LIMIT} tiles to Aidan's Canvas.
 title: "Place a tile"
 labels: [tile]
 body:
   - type: markdown
     attributes:
       value: |
-        ![Map of the canvas with row letters and column numbers](${MAP_URL})
+        Your tiles are ready. Select **Create** and they will appear on the canvas in about a minute.
 
-        Choose a spot and a shade. You can place up to ${DAILY_LIMIT} tiles a day, one per submission. New tiles appear daily, and the canvas resets weekly.
-
-        Aidan takes no responsibility for what is drawn here.
-${dropdown('row', 'Row', ROW_LETTERS)}${dropdown('column', 'Column', Array.from({ length: COLUMNS }, (_, i) => i + 1))}${dropdown('color', 'Color', Object.values(COLORS).map((c) => c.label))}`;
+        Want to change them? [Go back to the canvas](${SITE_URL}). Aidan takes no responsibility for what is drawn here.
+  - type: input
+    id: moves
+    attributes:
+      label: Tiles
+      description: Filled in by the canvas.
+      placeholder: "C12:Strong, D12:Soft"
+    validations:
+      required: true
+`;
 
 mkdirSync(join(OUT, 'assets'), { recursive: true });
 // GitHub's CDN caches images by path for five minutes, so each canvas version gets its own filename.
@@ -230,9 +194,8 @@ for (const mode of ['light', 'dark']) {
   writeFileSync(join(OUT, 'assets', canvasFile[mode]), svg);
   writeFileSync(join(OUT, 'assets', `button-${mode}.svg`), renderButton(mode));
 }
-writeFileSync(join(OUT, 'assets', 'canvas-map.svg'), renderMap());
 
-const themed = (render) => ['light', 'dark'].map((mode) => render(mode, `${FORM_URL}#gh-${mode}-mode-only`)).join('');
+const themed = (render) => ['light', 'dark'].map((mode) => render(mode, `${SITE_URL}#gh-${mode}-mode-only`)).join('');
 const button = themed((mode, href) => `<a href="${href}"><img align="right" src="assets/button-${mode}.svg" alt="Place a tile"></a>`);
 const canvas = themed((mode, href) => `[![${description} Select to place a tile.](assets/${canvasFile[mode]})](${href})`);
 writeFileSync(join(OUT, 'README.md'), `<h3>${button}${NAME}</h3>
@@ -241,7 +204,7 @@ A collaborative experiment. Place up to three tiles a day. Resets weekly.
 
 ${canvas}
 
-<sub><b>${placed}</b> custom ${tileWord} placed &middot; New tiles appear daily &middot; Aidan takes no responsibility for what is drawn here.</sub>
+<sub><b>${placed}</b> custom ${tileWord} placed &middot; Tiles appear in about a minute &middot; Aidan takes no responsibility for what is drawn here.</sub>
 `);
 
 if (OUT === '.') {

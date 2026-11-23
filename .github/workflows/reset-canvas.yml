@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: canvas
+  group: canvas-reset
 
 jobs:
   reset:
@@ -20,14 +20,4 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: npm ci --ignore-scripts
       - run: npm test
-      - run: node scripts/update-canvas.mjs reset
-      - run: npm run build
-      - name: Commit the reset canvas
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add canvas assets README.md
-          if ! git diff --cached --quiet; then
-            git commit -m "Reset canvas"
-            git push
-          fi
+      - run: bash scripts/publish.sh reset "Reset canvas"
