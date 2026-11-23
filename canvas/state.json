@@ -1,17 +1,24 @@
 {
   "version": 3,
   "updated": "2026-11-23",
-  "placed": 1,
+  "placed": 2,
   "placements": {
     "day": "2026-11-23",
     "counts": {
-      "AidanPhilpott": 2
+      "AidanPhilpott": 3
     }
   },
-  "fresh": [],
+  "fresh": [
+    "M1"
+  ],
   "tiles": {
     "A30": {
       "color": "l3",
+      "by": "AidanPhilpott",
+      "day": "2026-11-23"
+    },
+    "M1": {
+      "color": "l4",
       "by": "AidanPhilpott",
       "day": "2026-11-23"
     }
