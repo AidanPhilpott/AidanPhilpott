@@ -2,6 +2,6 @@
 
 A collaborative experiment. Place up to three tiles a day. Resets weekly.
 
-[![Aidan’s Canvas, a multiplayer pixel canvas that starts with the words Design Eng. and a smiley face. 2 custom tiles placed. Select to place a tile.](assets/canvas-light-fc96bc6e7f.svg)](https://aidanphilpott.github.io/AidanPhilpott/#gh-light-mode-only)[![Aidan’s Canvas, a multiplayer pixel canvas that starts with the words Design Eng. and a smiley face. 2 custom tiles placed. Select to place a tile.](assets/canvas-dark-4db7c48157.svg)](https://aidanphilpott.github.io/AidanPhilpott/#gh-dark-mode-only)
+[![Aidan’s Canvas, a multiplayer pixel canvas that starts with the words Design Eng. and a smiley face. 2 custom tiles placed. Select to place a tile.](assets/canvas-light-ec4a48904d.svg)](https://aidanphilpott.github.io/AidanPhilpott/#gh-light-mode-only)[![Aidan’s Canvas, a multiplayer pixel canvas that starts with the words Design Eng. and a smiley face. 2 custom tiles placed. Select to place a tile.](assets/canvas-dark-5b93d1932d.svg)](https://aidanphilpott.github.io/AidanPhilpott/#gh-dark-mode-only)
 
 <sub><b>2</b> custom tiles placed &middot; Tiles appear in about a minute &middot; Aidan takes no responsibility for what is drawn here.</sub>
