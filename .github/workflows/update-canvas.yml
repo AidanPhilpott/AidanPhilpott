@@ -18,12 +18,11 @@ jobs:
     timeout-minutes: 5
     env:
       GITHUB_TOKEN: ${{ github.token }}
-      CANVAS_RESULTS: ${{ runner.temp }}/canvas-results.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: npm ci --ignore-scripts
       - run: npm test
-      - run: node scripts/update-canvas.mjs apply
+      - run: CANVAS_RESULTS="$RUNNER_TEMP/canvas-results.json" node scripts/update-canvas.mjs apply
       - run: npm run build
       - name: Commit the updated canvas
         run: |
@@ -34,4 +33,4 @@ jobs:
             git commit -m "Update canvas"
             git push
           fi
-      - run: node scripts/update-canvas.mjs respond
+      - run: CANVAS_RESULTS="$RUNNER_TEMP/canvas-results.json" node scripts/update-canvas.mjs respond
