@@ -237,7 +237,7 @@ const button = themed((mode, href) => `<a href="${href}"><img align="right" src=
 const canvas = themed((mode, href) => `[![${description} Select to place a tile.](assets/${canvasFile[mode]})](${href})`);
 writeFileSync(join(OUT, 'README.md'), `<h3>${button}${NAME}</h3>
 
-A multiplayer collaboration. Place up to three tiles a day. Resets weekly.
+A collaborative experiment. Place up to three tiles a day. Resets weekly.
 
 ${canvas}
 
