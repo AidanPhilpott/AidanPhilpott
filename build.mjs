@@ -1,5 +1,6 @@
 // Renders Aidan's Canvas, its button and coordinate map, the README, and the issue form. Run: npm run build
 // Text lives in native Markdown so GitHub styles it. Graphics use GitHub's own component values.
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as fontkit from 'fontkit';
@@ -218,15 +219,19 @@ body:
 ${dropdown('row', 'Row', ROW_LETTERS)}${dropdown('column', 'Column', Array.from({ length: COLUMNS }, (_, i) => i + 1))}${dropdown('color', 'Color', Object.values(COLORS).map((c) => c.label))}`;
 
 mkdirSync(join(OUT, 'assets'), { recursive: true });
+// GitHub caches images for five minutes, so each canvas version gets its own URL.
+const canvasVersion = {};
 for (const mode of ['light', 'dark']) {
-  writeFileSync(join(OUT, 'assets', `canvas-${mode}.svg`), renderCanvas(mode));
+  const svg = renderCanvas(mode);
+  canvasVersion[mode] = createHash('sha256').update(svg).digest('hex').slice(0, 10);
+  writeFileSync(join(OUT, 'assets', `canvas-${mode}.svg`), svg);
   writeFileSync(join(OUT, 'assets', `button-${mode}.svg`), renderButton(mode));
 }
 writeFileSync(join(OUT, 'assets', 'canvas-map.svg'), renderMap());
 
 const themed = (render) => ['light', 'dark'].map((mode) => render(mode, `${FORM_URL}#gh-${mode}-mode-only`)).join('');
 const button = themed((mode, href) => `<a href="${href}"><img align="right" src="assets/button-${mode}.svg" alt="Place a tile"></a>`);
-const canvas = themed((mode, href) => `[![${description} Select to place a tile.](assets/canvas-${mode}.svg)](${href})`);
+const canvas = themed((mode, href) => `[![${description} Select to place a tile.](assets/canvas-${mode}.svg?v=${canvasVersion[mode]})](${href})`);
 writeFileSync(join(OUT, 'README.md'), `<h3>${button}${NAME}</h3>
 
 A multiplayer collaboration. Place up to three tiles a day. Resets weekly.
