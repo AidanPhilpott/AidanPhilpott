@@ -1,0 +1,29 @@
+{
+  "modes": ["light", "dark"],
+  "roles": {
+    "bg.primary": { "light": "#ffffff", "dark": "#0d1117" },
+    "bg.secondary": { "light": "#f6f8fa", "dark": "#151b23" },
+    "bg.tertiary": { "light": "#eff2f5", "dark": "#212830" },
+    "bg.grouped.primary": { "light": "#f6f8fa", "dark": "#010409" },
+    "bg.grouped.secondary": { "light": "#ffffff", "dark": "#151b23" },
+    "bg.grouped.tertiary": { "light": "#f6f8fa", "dark": "#212830" },
+    "label.primary": { "light": "#1f2328", "dark": "#f0f6fc" },
+    "label.secondary": { "light": "#59636e", "dark": "#9198a1" },
+    "label.tertiary": { "light": "#6b7480", "dark": "#848d97" },
+    "label.quaternary": { "light": "#9aa3ad", "dark": "#5f6873" },
+    "label.placeholder": { "light": "#6e7781", "dark": "#7d8590" },
+    "fill.primary": { "light": "#d1d9e0", "dark": "#3d444d" },
+    "fill.secondary": { "light": "#e3e8ed", "dark": "#2f353d" },
+    "fill.tertiary": { "light": "#eff2f5", "dark": "#262c34" },
+    "separator": { "light": "#8c959f", "dark": "#656c76" },
+    "separator.opaque": { "light": "#d1d9e0", "dark": "#3d444d" },
+    "link": { "light": "#0969da", "dark": "#4493f8" },
+    "accent": { "light": "#0969da", "dark": "#4493f8" },
+    "accent.on": { "light": "#ffffff", "dark": "#0d1117" },
+    "status.success": { "light": "#1a7f37", "dark": "#3fb950" },
+    "status.warning": { "light": "#9a6700", "dark": "#d29922" },
+    "status.danger": { "light": "#d1242f", "dark": "#f85149" },
+    "status.info": { "light": "#0969da", "dark": "#4493f8" }
+  },
+  "pairs": []
+}

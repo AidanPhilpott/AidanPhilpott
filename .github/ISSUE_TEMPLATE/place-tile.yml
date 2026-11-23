@@ -1,0 +1,111 @@
+name: Place a tile
+description: Add a tile to Aidan's Canvas.
+title: "Place a tile"
+labels: [tile]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ![Map of the canvas with row letters and column numbers](https://github.com/AidanPhilpott/AidanPhilpott/blob/main/assets/canvas-map.svg?raw=true)
+
+        Choose a spot and a shade. You can place up to 3 tiles a day, one per submission. New tiles appear daily, and the canvas resets weekly.
+
+        Aidan takes no responsibility for what is drawn here.
+  - type: dropdown
+    id: row
+    attributes:
+      label: Row
+      options:
+        - "A"
+        - "B"
+        - "C"
+        - "D"
+        - "E"
+        - "F"
+        - "G"
+        - "H"
+        - "I"
+        - "J"
+        - "K"
+        - "L"
+        - "M"
+    validations:
+      required: true
+  - type: dropdown
+    id: column
+    attributes:
+      label: Column
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+        - "10"
+        - "11"
+        - "12"
+        - "13"
+        - "14"
+        - "15"
+        - "16"
+        - "17"
+        - "18"
+        - "19"
+        - "20"
+        - "21"
+        - "22"
+        - "23"
+        - "24"
+        - "25"
+        - "26"
+        - "27"
+        - "28"
+        - "29"
+        - "30"
+        - "31"
+        - "32"
+        - "33"
+        - "34"
+        - "35"
+        - "36"
+        - "37"
+        - "38"
+        - "39"
+        - "40"
+        - "41"
+        - "42"
+        - "43"
+        - "44"
+        - "45"
+        - "46"
+        - "47"
+        - "48"
+        - "49"
+        - "50"
+        - "51"
+        - "52"
+        - "53"
+        - "54"
+        - "55"
+        - "56"
+        - "57"
+        - "58"
+        - "59"
+        - "60"
+    validations:
+      required: true
+  - type: dropdown
+    id: color
+    attributes:
+      label: Color
+      options:
+        - "Faint"
+        - "Soft"
+        - "Medium"
+        - "Strong"
+    validations:
+      required: true
