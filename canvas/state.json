@@ -8,11 +8,7 @@
       "jellyjuices": 3
     }
   },
-  "fresh": [
-    "E18",
-    "I18",
-    "I19"
-  ],
+  "fresh": [],
   "tiles": {
     "E18": {
       "color": "l1",
