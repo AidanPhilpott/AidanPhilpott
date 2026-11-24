@@ -6,6 +6,19 @@
   <meta name="canvas-api" content="https://api.github.com/repos/AidanPhilpott/AidanPhilpott">
   <meta name="description" content="A collaborative experiment. Place up to three tiles a day.">
   <title>Aidan’s Canvas</title>
+  <script>
+    // Runs before the styles load so the page never flashes the wrong theme.
+    (() => {
+      const device = matchMedia('(prefers-color-scheme: dark)');
+      const apply = () => {
+        const linked = location.hash.match(/^#gh-(light|dark)-mode-only$/)?.[1];
+        document.documentElement.dataset.theme = linked ?? (device.matches ? 'dark' : 'light');
+      };
+      apply();
+      device.addEventListener('change', apply);
+      addEventListener('hashchange', apply);
+    })();
+  </script>
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="picker.css">
   <script type="module" src="picker.js"></script>

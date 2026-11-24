@@ -47,29 +47,28 @@
   --easing-out: cubic-bezier(.3, .8, .6, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bgColor-default: #0d1117;
-    --bgColor-muted: #151b23;
-    --fgColor-default: #f0f6fc;
-    --fgColor-muted: #9198a1;
-    --fgColor-accent: #4493f8;
-    --borderColor-default: #3d444d;
-    --bgColor-accent-emphasis: #1f6feb;
-    --button-default-bg: #212830;
-    --button-default-bg-hover: #262c36;
-    --button-default-border: #3d444d;
-    --button-default-fg: #f0f6fc;
-    --button-primary-bg: #238636;
-    --button-primary-bg-hover: #29903b;
-    --button-primary-border: #ffffff26;
-    --button-disabled-bg: #212830;
-    --button-disabled-fg: #848d97;
-    --contribution-0: #151b23;
-    --contribution-l1: #033a16;
-    --contribution-l2: #196c2e;
-    --contribution-l3: #2ea043;
-    --contribution-l4: #56d364;
-  }
+/* index.html sets data-theme from the profile link, or from the device when opened directly. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bgColor-default: #0d1117;
+  --bgColor-muted: #151b23;
+  --fgColor-default: #f0f6fc;
+  --fgColor-muted: #9198a1;
+  --fgColor-accent: #4493f8;
+  --borderColor-default: #3d444d;
+  --bgColor-accent-emphasis: #1f6feb;
+  --button-default-bg: #212830;
+  --button-default-bg-hover: #262c36;
+  --button-default-border: #3d444d;
+  --button-default-fg: #f0f6fc;
+  --button-primary-bg: #238636;
+  --button-primary-bg-hover: #29903b;
+  --button-primary-border: #ffffff26;
+  --button-disabled-bg: #212830;
+  --button-disabled-fg: #848d97;
+  --contribution-0: #151b23;
+  --contribution-l1: #033a16;
+  --contribution-l2: #196c2e;
+  --contribution-l3: #2ea043;
+  --contribution-l4: #56d364;
 }
