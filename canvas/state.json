@@ -1,13 +1,33 @@
 {
   "version": 3,
-  "updated": "2026-11-23",
-  "placed": 0,
+  "updated": "2026-11-24",
+  "placed": 3,
   "placements": {
-    "day": "2026-11-23",
+    "day": "2026-11-24",
     "counts": {
-      "AidanPhilpott": 3
+      "jellyjuices": 3
     }
   },
-  "fresh": [],
-  "tiles": {}
+  "fresh": [
+    "E18",
+    "I18",
+    "I19"
+  ],
+  "tiles": {
+    "E18": {
+      "color": "l1",
+      "by": "jellyjuices",
+      "day": "2026-11-24"
+    },
+    "I18": {
+      "color": "l1",
+      "by": "jellyjuices",
+      "day": "2026-11-24"
+    },
+    "I19": {
+      "color": "l4",
+      "by": "jellyjuices",
+      "day": "2026-11-24"
+    }
+  }
 }
