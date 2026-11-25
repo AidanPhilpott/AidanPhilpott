@@ -113,7 +113,7 @@ export function applyMoves(state, issues, today) {
       else if ((counts.get(login) ?? 0) >= DAILY_LIMIT) outcome = 'limit';
       else if (claimed.has(cell)) outcome = 'taken';
       if (outcome === 'placed') {
-        next.tiles[cell] = { color, by: login, day: today };
+        next.tiles[cell] = { color, by: login, day: today, at: String(issue.created_at ?? today) };
         next.fresh.push(cell);
         counts.set(login, (counts.get(login) ?? 0) + 1);
         claimed.add(cell);
@@ -131,6 +131,43 @@ export function applyMoves(state, issues, today) {
     next.placements = { day: today, counts: Object.fromEntries(counts) };
   }
   return { state: next, results };
+}
+
+// Recent visitors replay their tiles as cursors. Each person gets one cursor that visits
+// every tile of theirs still on the canvas, across all their submissions this week.
+export const MAX_VISITORS = 5;
+const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
+const gridPoint = (cell) => ({ row: ROW_LETTERS.indexOf(cell[0]), column: Number(cell.slice(1)) - 1 });
+const distance = (a, b) => Math.hypot(a.row - b.row, a.column - b.column);
+
+// Starts at the person's first tile, then always hops to the nearest one left, so the cursor never zigzags.
+function route(cells) {
+  const left = [...cells].sort((a, b) => a.at.localeCompare(b.at) || a.cell.localeCompare(b.cell));
+  const path = [left.shift()];
+  while (left.length) {
+    const here = gridPoint(path.at(-1).cell);
+    let best = 0;
+    left.forEach((c, i) => {
+      if (distance(here, gridPoint(c.cell)) < distance(here, gridPoint(left[best].cell))) best = i;
+    });
+    path.push(...left.splice(best, 1));
+  }
+  return path;
+}
+
+export function visitorReplay(tiles, max = MAX_VISITORS) {
+  const people = new Map();
+  for (const [cell, tile] of Object.entries(tiles ?? {})) {
+    if (cell === DOT_CELL || !COLORS[tile?.color] || !LOGIN.test(tile?.by ?? '')) continue;
+    const key = tile.by.toLowerCase();
+    if (!people.has(key)) people.set(key, { login: tile.by, cells: [] });
+    people.get(key).cells.push({ cell, color: tile.color, at: String(tile.at ?? tile.day ?? '') });
+  }
+  const latest = (person) => person.cells.reduce((last, c) => (c.at > last ? c.at : last), '');
+  return [...people.values()]
+    .sort((a, b) => latest(a).localeCompare(latest(b)) || a.login.localeCompare(b.login))
+    .slice(-max)
+    .map(({ login, cells }) => ({ login, cells: route(cells).map(({ cell, color }) => ({ cell, color })) }));
 }
 
 const list = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);

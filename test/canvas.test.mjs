@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  DAILY_CAP, DAILY_LIMIT, DEFAULT_TILES, DOT_CELL, applyMoves, blankState, formatMoves, parseMoves, replyFor, resetState,
+  DAILY_CAP, DAILY_LIMIT, DEFAULT_TILES, DOT_CELL, MAX_VISITORS, applyMoves, blankState, formatMoves, parseMoves, replyFor, resetState,
+  visitorReplay,
 } from '../scripts/canvas.mjs';
 
 const body = (moves) => `### Tiles\n\n${moves}\n`;
@@ -43,7 +44,9 @@ test('places every tile in one submission and counts them', () => {
   assert.deepEqual(outcomes(result), ['placed']);
   assert.equal(result.state.placed, 3);
   assert.deepEqual(result.state.fresh, ['A1', 'B1', 'C1']);
-  assert.deepEqual(result.state.tiles.A1, { color: 'l3', by: 'ada', day });
+  const { at, ...tile } = result.state.tiles.A1;
+  assert.deepEqual(tile, { color: 'l3', by: 'ada', day });
+  assert.match(at, /^2026-11-23T/);
 });
 
 test('the period in Eng. is protected without using an allowance', () => {
@@ -113,4 +116,28 @@ test('replies explain each tile and never echo raw issue text', () => {
   assert.match(reply, /I46 is reserved/);
   const invalid = applyMoves(blankState(), [issue('ada', body('<img src=x>'))], day);
   assert.doesNotMatch(replyFor(invalid.results[0]), /img/);
+});
+
+test('one cursor per visitor, covering every submission they made', () => {
+  const monday = applyMoves(blankState(), [issue('ada', body('A1:Soft, A3:Soft')), issue('grace', body('M60:Strong'))], day);
+  const later = applyMoves(monday.state, [issue('Ada', body('A2:Medium'))], '2026-11-24');
+  const replay = visitorReplay(later.state.tiles);
+  assert.deepEqual(replay.map((v) => v.login), ['grace', 'ada']);
+  // Starts at the first tile placed, then takes the nearest one next.
+  assert.deepEqual(replay[1].cells.map((c) => c.cell), ['A1', 'A2', 'A3']);
+});
+
+test('the replay skips painted-over tiles and keeps only the latest visitors', () => {
+  const first = applyMoves(blankState(), [issue('ada', body('A1:Soft'))], day);
+  const painted = applyMoves(first.state, [issue('grace', body('A1:Strong'))], day);
+  assert.deepEqual(visitorReplay(painted.state.tiles).map((v) => v.login), ['grace']);
+  const crowd = Object.fromEntries(Array.from({ length: MAX_VISITORS + 2 }, (_, i) => [`B${i + 1}`, { color: 'l2', by: `p${i}`, at: `2026-11-23T00:00:0${i}Z` }]));
+  const shown = visitorReplay(crowd).map((v) => v.login);
+  assert.equal(shown.length, MAX_VISITORS);
+  assert.equal(shown.at(-1), `p${MAX_VISITORS + 1}`);
+});
+
+test('the replay never renders a malformed name or a tile without a colour', () => {
+  const tiles = { A1: { color: 'l2', by: '<script>' }, A2: { color: 'pink', by: 'ada' }, A3: { color: 'l2', by: 'ada', day } };
+  assert.deepEqual(visitorReplay(tiles), [{ login: 'ada', cells: [{ cell: 'A3', color: 'l2' }] }]);
 });
